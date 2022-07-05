@@ -6,7 +6,7 @@
 # email: nguyenmaudung93.kstn@gmail.com
 
 # Modifier: Vineet Suryan
-# email: suryanvineet47@gmail.com
+# email: vineet.suryan@collabora.com
 -----------------------------------------------------------------------------------
 # Description: ONNX Testing script
 """

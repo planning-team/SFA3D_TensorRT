@@ -3,7 +3,7 @@
 -----------------------------------------------------------------------------------
 # Author: Vineet Suryan
 # DoC: 2022.06.29
-# email: suryanvineet47@gmail.com
+# email: vineet.suryan@collabora.com
 -----------------------------------------------------------------------------------
 # Description: Export ONNX/TensorRT script
 """
