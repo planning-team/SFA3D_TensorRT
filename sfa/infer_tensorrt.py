@@ -254,7 +254,9 @@ if __name__ == '__main__':
         
         out_raw, infer_time = fpn_resnet(input_img)
         outputs = [torch.from_numpy(output.reshape((1,-1,152,152))) for output in out_raw]
+        print(outputs[0][0,0,0,:5])
         outputs[0] = _sigmoid(outputs[0])
+        print(outputs[0][0,0,0,:5])
         outputs[1] = _sigmoid(outputs[1])
 
         # detections size (batch_size, K, 10)
@@ -265,7 +267,8 @@ if __name__ == '__main__':
             detections, configs.num_classes, configs.down_ratio, configs.peak_thresh)
 
         detections = detections[0]  # only first batch
-
+        print(detections.shape)
+        xx
         # Draw prediction in the image
         bev_map = (bev_maps.squeeze().permute(1, 2, 0).numpy() * 255).astype(np.uint8)
         bev_map = cv2.resize(bev_map, (cnf.BEV_WIDTH, cnf.BEV_HEIGHT))

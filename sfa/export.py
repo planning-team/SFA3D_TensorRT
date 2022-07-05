@@ -95,7 +95,7 @@ def convert_to_onnx(model_torch, image, onnx_path=None, simplify=True):
                 onnx_path,
                 export_params=True,
                 verbose=False,
-                opset_version=13,
+                opset_version=14,
                 do_constant_folding=True,
                 input_names=['images'],
                 output_names=['output'],
@@ -150,21 +150,23 @@ def convert_to_trt(onnx_path, trt_engine_path, fp16=False):
         config.max_workspace_size = 256 *  1 << 20  # 256 MB
         builder.max_batch_size = 1
 
+        # Parse onnx model.
+        with open(onnx_path, 'rb') as onnx_file:
+            if not parser.parse(onnx_file.read()):
+                for error in range(parser.num_errors):
+                    print(parser.get_error(error))
+
         # FP16 quantization.
         if builder.platform_has_fast_fp16 and fp16:
+            print("[INFO] Setting fp16 to true.")
             trt_engine_path = trt_engine_path.replace('.engine', '_fp16.engine')
-            config.flags = 1 << (int)(trt.BuilderFlag.FP16)
+            config.set_flag(trt.BuilderFlag.FP16)
         else:
             trt_engine_path = trt_engine_path.replace('.engine', '_fp32.engine')
         if os.path.exists(trt_engine_path):
             print(f"{trt_engine_path} already exists.",
             f"Please delete or change trt_path with --trt_path \"your_engine_file_path.engine\"")
             return None
-        # Parse onnx model.
-        with open(onnx_path, 'rb') as onnx_file:
-            if not parser.parse(onnx_file.read()):
-                for error in range(parser.num_errors):
-                    print(parser.get_error(error))
 
         # Build engine.
         engine = builder.build_engine(network, config)
