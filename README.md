@@ -116,6 +116,13 @@ tensorboard --logdir=./
 
 - Then go to [http://localhost:6006/](http://localhost:6006/)
 
+## 3. TensorRT
+TensorRT setup, conversion & inference docs are [here](https://github.com/makaveli10/SFA3D/blob/master/docs/tensorrt.md).
+
+
+## 4. Benchmarks
+Benchmarks for different frameworks on some devices are [here](https://github.com/makaveli10/SFA3D/blob/master/docs/benchmarks.md)
+
 
 ## Contact
 
