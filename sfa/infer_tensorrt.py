@@ -47,13 +47,14 @@ from data_process.transformation import lidar_to_camera_box
 class FPNResnet18TRT:
     """FPN Resnet18 TensorRT inference utility class.
     """
-    def __init__(self, engine_path):
+    def __init__(self, engine_path, is_fp16):
         """Initialize.
         """
         # Create a Context on this device,
         self._ctx = cuda.Device(0).make_context()
         self._logger = trt.Logger(trt.Logger.INFO)
         self._stream = cuda.Stream()
+        self._is_fp16 = is_fp16
 
         # initiate engine related class attributes
         self._engine = None
@@ -129,7 +130,8 @@ class FPNResnet18TRT:
 
         # copy inputs to input memory
         # without astype gives invalid arg error
-        self._inputs[0]['host'] = np.ravel(inputs).astype(np.float32)
+        self._inputs[0]['host'] = np.ravel(inputs).astype(np.float16) if self._is_fp16 \
+                                  else np.ravel(inputs).astype(np.float32)
 
         # transfer data to the gpu
         t1 = time.time()
@@ -189,8 +191,10 @@ def parse_test_configs():
     parser.add_argument('--onnx_path', type=str, default=None,
                         help='file to save onnx model')
     parser.add_argument('--trt_path', type=str,
-                        default='../checkpoints/trt/fpn_resnet18_fp16.engine',
+                        default='../checkpoints/trt/fpn_resnet18_fp32.engine',
                         help='file to save tensorrt engine')
+    parser.add_argument('--fp16', action='store_true',
+                        help='If true, fp16 inference.')
 
     configs = edict(vars(parser.parse_args()))
     configs.pin_memory = True
@@ -236,7 +240,7 @@ if __name__ == '__main__':
     configs = parse_test_configs()
     configs.device = torch.device('cuda:0')
 
-    fpn_resnet = FPNResnet18TRT(configs.trt_path)
+    fpn_resnet = FPNResnet18TRT(configs.trt_path, configs.fp16)
 
     test_dataloader = create_test_dataloader(configs)
     times = []
@@ -253,7 +257,7 @@ if __name__ == '__main__':
         input_img = bev_maps.float().contiguous()
         
         out_raw, infer_time = fpn_resnet(input_img)
-        outputs = [torch.from_numpy(output.reshape((1,-1,152,152))) for output in out_raw]
+        outputs = [torch.from_numpy(output.reshape((1,-1,152,152))).float() for output in out_raw]
         outputs[0] = _sigmoid(outputs[0])
         outputs[1] = _sigmoid(outputs[1])
 

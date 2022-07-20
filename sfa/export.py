@@ -49,6 +49,10 @@ def parse_configs():
                         help='file to save tensorrt engine')
     parser.add_argument('--fp16', action='store_true',
                         help='If true, fp16 quantization for TensorRT.')
+    parser.add_argument('--gpu_idx', default=0, type=int,
+                        help='GPU index to use.')
+    parser.add_argument('--no_cuda', action='store_true',
+                        help='If true, cuda is not used.')
 
     configs = edict(vars(parser.parse_args()))
     configs.pin_memory = True
@@ -181,13 +185,24 @@ if __name__ == '__main__':
     model = create_model(configs)
     print('\n\n' + '-*=' * 30 + '\n\n')
     assert os.path.isfile(configs.pretrained_path), "No file at {}".format(configs.pretrained_path)
+    
+    configs.device = torch.device('cpu' if configs.no_cuda else 'cuda:{}'.format(configs.gpu_idx))
+
     model.load_state_dict(torch.load(configs.pretrained_path, map_location='cpu'))
+    model.eval()
+
+    # cut pytorch weights to half()
+    if configs.fp16:    
+        model = model.to(device=configs.device).half()
+        configs.onnx_path = configs.onnx_path.replace('.onnx', '_half.onnx')
+    
     print('Loaded weights from {}\n'.format(configs.pretrained_path))
 
-    model.eval()
     print('Converting to ONNX...')
     if not os.path.exists(configs.onnx_path):
         img = torch.zeros(1, 3, 608, 608)
+        if configs.fp16:
+            img = img.to(device=configs.device).half()
         convert_to_onnx(model, img, configs.onnx_path)
     else:
         print("Model already exists.")
