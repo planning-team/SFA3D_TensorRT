@@ -36,3 +36,20 @@ Benchmarking Environment:
 
 
 P.S. : Overall TensorRT FP16 is faster than FP32 on AGX. The time taken for stream synchronisation makes up for the fast inference time of TensorRT FP32. Numbers including the sync time as well; TRT FP32 -> 24 FPS, TRT FP16 -> 60 FPS. While there was no such difference on RTX 2080 Ti.
+
+
+## Accuracy
+- Synthetic CARLA dataset created with [carla-object-detection-dataset]()
+```
+Car AP(Average Precision)@0.70, 0.50, 0.50:
+bev  AP:89.99, 90.13, 90.10
+3d   AP:89.97, 90.07, 90.04
+
+Pedestrian AP(Average Precision)@0.50, 0.25, 0.25:
+bev  AP:75.08, 68.78, 67.35
+3d   AP:74.46, 66.98, 66.99
+
+Cyclist AP(Average Precision)@0.50, 0.25, 0.25:
+bev  AP:88.66, 86.66, 86.82
+3d   AP:88.90, 86.75, 87.07
+```
