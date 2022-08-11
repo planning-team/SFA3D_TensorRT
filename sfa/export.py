@@ -17,6 +17,8 @@ import onnx
 import onnxsim
 import tensorrt as trt
 from easydict import EasyDict as edict
+from tvm.driver import tvmc
+import numpy as np
 from models.model_utils import create_model
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -38,11 +40,11 @@ def parse_configs():
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH',
                         help='The name of the model architecture')
     parser.add_argument('--pretrained_path', type=str,
-                        default='../checkpoints/fpn_resnet_18/Model_fpn_resnet_18_epoch_200.pth',
+                        default='../checkpoints/Model_fpn_resnet_18_more_cyclist_epoch_300.pth',
                         metavar='PATH', help='the path of the pretrained checkpoint')
     parser.add_argument('--batch_size', type=int, default=1,
                         help='mini-batch size (default: 4)')
-    parser.add_argument('--onnx_path', type=str, default='../checkpoints/onnx/fpn_resnet18.onnx',
+    parser.add_argument('--onnx_path', type=str, default='../checkpoints/onnx/model3d.onnx',
                         help='file to save onnx model')
     parser.add_argument('--trt_path', type=str,
                         default='../checkpoints/trt/fpn_resnet18.engine',
@@ -53,6 +55,10 @@ def parse_configs():
                         help='GPU index to use.')
     parser.add_argument('--no_cuda', action='store_true',
                         help='If true, cuda is not used.')
+    parser.add_argument('--tvm', action='store_true', help="Tune model with Apache TVM.")
+    parser.add_argument('--tvm-logs', default='./results/tvm_tuning_results.json', type=str, 
+                        help="File to save tvm tuning results")
+    parser
 
     configs = edict(vars(parser.parse_args()))
     configs.pin_memory = True
@@ -209,3 +215,14 @@ if __name__ == '__main__':
 
     print('Converting to TensorRT...')
     convert_to_trt(configs.onnx_path, configs.trt_path, fp16=configs.fp16)
+
+    if configs.tvm:
+        model = tvmc.load(configs.onnx_path)
+        tvmc.tune(model, target="cuda", tuning_records=configs.tvm_logs)
+        package = tvmc.compile(model, target="cuda", tuning_records = configs.tvm_logs)
+        img = np.zeros((1, 3, 608, 608)).astype(np.float32)
+        inputs = {
+            "images": img
+        }
+        result = tvmc.run(package, inputs=inputs, device="cuda")
+        print(result)
