@@ -30,6 +30,7 @@ while not src_dir.endswith("sfa"):
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
+np.random.seed(42)
 
 def parse_configs():
     """Parse config arguments.
@@ -44,7 +45,7 @@ def parse_configs():
                         metavar='PATH', help='the path of the pretrained checkpoint')
     parser.add_argument('--batch_size', type=int, default=1,
                         help='mini-batch size (default: 4)')
-    parser.add_argument('--onnx_path', type=str, default='../checkpoints/onnx/model3d.onnx',
+    parser.add_argument('--onnx_path', type=str, default='../checkpoints/onnx/fpn_resnet18.onnx',
                         help='file to save onnx model')
     parser.add_argument('--trt_path', type=str,
                         default='../checkpoints/trt/fpn_resnet18.engine',
@@ -58,8 +59,6 @@ def parse_configs():
     parser.add_argument('--tvm', action='store_true', help="Tune model with Apache TVM.")
     parser.add_argument('--tvm-logs', default='./results/tvm_tuning_results.json', type=str, 
                         help="File to save tvm tuning results")
-    parser
-
     configs = edict(vars(parser.parse_args()))
     configs.pin_memory = True
     configs.distributed = False  # For testing on 1 GPU only
@@ -217,12 +216,14 @@ if __name__ == '__main__':
     convert_to_trt(configs.onnx_path, configs.trt_path, fp16=configs.fp16)
 
     if configs.tvm:
+        autotune_tvm(configs.onnx_path)
         model = tvmc.load(configs.onnx_path)
         tvmc.tune(model, target="cuda", tuning_records=configs.tvm_logs)
-        package = tvmc.compile(model, target="cuda", tuning_records = configs.tvm_logs)
-        img = np.zeros((1, 3, 608, 608)).astype(np.float32)
+        package = tvmc.compile(model, target="cuda", tuning_records = configs.tvm_logs, package_path="model-tvm.tar")
+        img = np.zeros((3, 608, 608)).astype(np.float32)
+        img = np.expand_dims(img, axis=0)
         inputs = {
             "images": img
         }
         result = tvmc.run(package, inputs=inputs, device="cuda")
-        print(result)
+        print(result['output_0'])
