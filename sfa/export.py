@@ -41,7 +41,7 @@ def parse_configs():
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH',
                         help='The name of the model architecture')
     parser.add_argument('--pretrained_path', type=str,
-                        default='../checkpoints/Model_fpn_resnet_18_more_cyclist_epoch_300.pth',
+                        default='../checkpoints/fpn_resnet_18/fpn_resnet_18_epoch_300.pth',
                         metavar='PATH', help='the path of the pretrained checkpoint')
     parser.add_argument('--batch_size', type=int, default=1,
                         help='mini-batch size (default: 4)')
