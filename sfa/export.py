@@ -17,7 +17,7 @@ import onnx
 import onnxsim
 import tensorrt as trt
 from easydict import EasyDict as edict
-from tvm.driver import tvmc
+#from tvm.driver import tvmc
 import numpy as np
 from models.model_utils import create_model
 
