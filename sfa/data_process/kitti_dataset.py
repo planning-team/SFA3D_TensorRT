@@ -116,7 +116,8 @@ class KittiDataset(Dataset):
         return metadatas, bev_map, targets
 
     def get_image(self, idx):
-        img_path = os.path.join(self.image_dir, '{:06d}.jpg'.format(idx))
+        img_path = os.path.join(self.image_dir, '{:06d}.png'.format(idx))
+        print(img_path)
         img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
 
         return img_path, img

@@ -8,6 +8,7 @@
 # Description: Export ONNX/TensorRT script
 """
 
+
 import argparse
 import sys
 import os
@@ -17,7 +18,7 @@ import onnx
 import onnxsim
 import tensorrt as trt
 from easydict import EasyDict as edict
-from tvm.driver import tvmc
+#from tvm.driver import tvmc
 import numpy as np
 from models.model_utils import create_model
 
@@ -41,7 +42,7 @@ def parse_configs():
     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH',
                         help='The name of the model architecture')
     parser.add_argument('--pretrained_path', type=str,
-                        default='../checkpoints/Model_fpn_resnet_18_more_cyclist_epoch_300.pth',
+                        default='../checkpoints/fpn_resnet_18/fpn_resnet_18_epoch_300.pth',
                         metavar='PATH', help='the path of the pretrained checkpoint')
     parser.add_argument('--batch_size', type=int, default=1,
                         help='mini-batch size (default: 4)')
@@ -52,6 +53,8 @@ def parse_configs():
                         help='file to save tensorrt engine')
     parser.add_argument('--fp16', action='store_true',
                         help='If true, fp16 quantization for TensorRT.')
+    parser.add_argument('--int8', action='store_true',
+                        help='If true, int8 quantization for TensorRT.')
     parser.add_argument('--gpu_idx', default=0, type=int,
                         help='GPU index to use.')
     parser.add_argument('--no_cuda', action='store_true',
@@ -129,7 +132,7 @@ def convert_to_onnx(model_torch, image, onnx_path=None, simplify=True):
         print((f'[INFO] export failure: {exception}'))
 
 
-def convert_to_trt(onnx_path, trt_engine_path, fp16=False):
+def convert_to_trt(onnx_path, trt_engine_path, fp16=False, int8=False):
     """Convert ONNX to TensorRT.
     """
     # pylint: disable=no-member
@@ -164,8 +167,12 @@ def convert_to_trt(onnx_path, trt_engine_path, fp16=False):
             print("[INFO] Setting fp16 to true.")
             trt_engine_path = trt_engine_path.replace('.engine', '_fp16.engine')
             config.flags = 1 << (int)(trt.BuilderFlag.FP16)
-        else:
-            trt_engine_path = trt_engine_path.replace('.engine', '_fp32.engine')
+        # INT8 quantization.
+        elif builder.platform_has_fast_int8 and int8:
+            print("[INFO] Setting int8 to true.")
+            trt_engine_path = trt_engine_path.replace('.engine', '_int8.engine')
+            config.flags = 1 << (int)(trt.BuilderFlag.INT8)	
+        else: trt_engine_path = trt_engine_path.replace('.engine', '_fp32.engine')
         if os.path.exists(trt_engine_path):
             print(f"{trt_engine_path} already exists.",
             f"Please delete or change trt_path with --trt_path \"your_engine_file_path.engine\"")
@@ -185,8 +192,8 @@ def convert_to_trt(onnx_path, trt_engine_path, fp16=False):
 
 
 if __name__ == '__main__':
+    print('Hello world!')
     configs = parse_configs()
-
     model = create_model(configs)
     print('\n\n' + '-*=' * 30 + '\n\n')
     assert os.path.isfile(configs.pretrained_path), "No file at {}".format(configs.pretrained_path)
@@ -213,7 +220,7 @@ if __name__ == '__main__':
         print("Model already exists.")
 
     print('Converting to TensorRT...')
-    convert_to_trt(configs.onnx_path, configs.trt_path, fp16=configs.fp16)
+    convert_to_trt(configs.onnx_path, configs.trt_path, fp16=configs.fp16, int8=configs.int8)
 
     if configs.tvm:
         autotune_tvm(configs.onnx_path)

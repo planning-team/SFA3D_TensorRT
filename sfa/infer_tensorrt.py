@@ -191,7 +191,7 @@ def parse_test_configs():
     parser.add_argument('--onnx_path', type=str, default=None,
                         help='file to save onnx model')
     parser.add_argument('--trt_path', type=str,
-                        default='../checkpoints/trt/fpn_resnet18_fp32.engine',
+                        default='../checkpoints/trt/fpn_resnet18_fp16.engine',
                         help='file to save tensorrt engine')
     parser.add_argument('--fp16', action='store_true',
                         help='If true, fp16 inference.')
@@ -281,7 +281,9 @@ if __name__ == '__main__':
         img_rgb = img_rgbs[0].numpy()
         img_rgb = cv2.resize(img_rgb, (img_rgb.shape[1], img_rgb.shape[0]))
         img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
-        calib = Calibration(img_path.replace(".jpg", ".txt").replace("image_2", "calib"))
+        print(img_path)
+        print(img_path.replace(".png", ".txt").replace("image_2", "calib"))
+        calib = Calibration(img_path.replace(".png", ".txt").replace("image_2", "calib"))
         kitti_dets = convert_det_to_real_values(detections)
 
         if len(kitti_dets) > 0:
@@ -297,7 +299,7 @@ if __name__ == '__main__':
         if configs.save_test_output:
             if configs.output_format == 'image':
                 img_fn = os.path.basename(metadatas['img_path'][0])[:-4]
-                cv2.imwrite(os.path.join(configs.results_dir, '{}.jpg'.format(img_fn)), out_img)
+                cv2.imwrite(os.path.join(configs.results_dir, '{}.png'.format(img_fn)), out_img)
             elif configs.output_format == 'video':
                 if out_cap is None:
                     out_cap_h, out_cap_w = out_img.shape[:2]

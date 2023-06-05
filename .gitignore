@@ -111,6 +111,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+sfa3d_env/
 env/
 venv/
 ENV/
