@@ -47,12 +47,13 @@ class KittiDataset(Dataset):
         self.lidar_aug = lidar_aug
         self.hflip_prob = hflip_prob
 
-        self.image_dir = os.path.join(self.dataset_dir, sub_folder, "image_2")
-        self.lidar_dir = os.path.join(self.dataset_dir, sub_folder, "velodyne")
-        self.calib_dir = os.path.join(self.dataset_dir, sub_folder, "calib")
-        self.label_dir = os.path.join(self.dataset_dir, sub_folder, "label_2")
+        self.image_dir = "/home/beluga/Research/SFA3D_TensorRT/dataset/kitti/training/image_2" #os.path.join(self.dataset_dir, sub_folder, "image_2")
+        self.lidar_dir = "/home/beluga/Research/SFA3D_TensorRT/dataset/kitti/training/velodyne"# os.path.join(self.dataset_dir, sub_folder, "velodyne")
+        self.calib_dir = "/home/beluga/Research/SFA3D_TensorRT/dataset/kitti/training/calib" #os.path.join(self.dataset_dir, sub_folder, "calib")
+        self.label_dir = "/home/beluga/Research/SFA3D_TensorRT/dataset/kitti/training/label_2" #os.path.join(self.dataset_dir, sub_folder, "label_2")
         split_txt_path = os.path.join(self.dataset_dir, 'ImageSets', '{}.txt'.format(mode))
         print(split_txt_path)
+        split_txt_path = "/home/beluga/Research/SFA3D_TensorRT/dataset/kitti/ImageSets/test.txt"
         self.sample_id_list = [int(x.strip()) for x in open(split_txt_path).readlines()]
         print(self.sample_id_list)
 
@@ -119,6 +120,7 @@ class KittiDataset(Dataset):
 
     def get_image(self, idx):
         img_path = os.path.join(self.image_dir, '{:06d}.png'.format(idx))
+        print("!!!!!!!!!!!!!!!!!!!!", img_path)
         img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
 
         return img_path, img
@@ -288,7 +290,7 @@ if __name__ == '__main__':
     configs.num_classes = 3
     configs.output_width = 608
 
-    configs.dataset_dir = os.path.join('../../', 'dataset', 'kitti')
+    configs.dataset_dir = "/home/beluga/Research/SFA3D_TensorRT/dataset/kitti" #os.path.join('../../', 'dataset', 'kitti')
     # lidar_aug = OneOf([
     #     Random_Rotation(limit_angle=np.pi / 4, p=1.),
     #     Random_Scaling(scaling_range=(0.95, 1.05), p=1.),
