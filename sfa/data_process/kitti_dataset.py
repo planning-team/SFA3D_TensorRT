@@ -52,7 +52,9 @@ class KittiDataset(Dataset):
         self.calib_dir = os.path.join(self.dataset_dir, sub_folder, "calib")
         self.label_dir = os.path.join(self.dataset_dir, sub_folder, "label_2")
         split_txt_path = os.path.join(self.dataset_dir, 'ImageSets', '{}.txt'.format(mode))
+        print(split_txt_path)
         self.sample_id_list = [int(x.strip()) for x in open(split_txt_path).readlines()]
+        print(self.sample_id_list)
 
         if num_samples is not None:
             self.sample_id_list = self.sample_id_list[:num_samples]
@@ -85,7 +87,7 @@ class KittiDataset(Dataset):
     def load_img_with_targets(self, index):
         """Load images and targets for the training and validation phase"""
         sample_id = int(self.sample_id_list[index])
-        img_path = os.path.join(self.image_dir, '{:06d}.jpg'.format(sample_id))
+        img_path = os.path.join(self.image_dir, '{:06d}.png'.format(sample_id))
         lidarData = self.get_lidar(sample_id)
         calib = self.get_calib(sample_id)
         labels, has_labels = self.get_label(sample_id)
@@ -116,7 +118,7 @@ class KittiDataset(Dataset):
         return metadatas, bev_map, targets
 
     def get_image(self, idx):
-        img_path = os.path.join(self.image_dir, '{:06d}.jpg'.format(idx))
+        img_path = os.path.join(self.image_dir, '{:06d}.png'.format(idx))
         img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
 
         return img_path, img
@@ -293,12 +295,12 @@ if __name__ == '__main__':
     # ], p=1.)
     lidar_aug = None
 
-    dataset = KittiDataset(configs, mode='val', lidar_aug=lidar_aug, hflip_prob=0., num_samples=configs.num_samples)
+    dataset = KittiDataset(configs, mode='train', lidar_aug=lidar_aug, hflip_prob=0., num_samples=configs.num_samples)
 
     print('\n\nPress n to see the next sample >>> Press Esc to quit...')
     for idx in range(len(dataset)):
         bev_map, labels, img_rgb, img_path = dataset.draw_img_with_label(idx)
-        calib = Calibration(img_path.replace(".jpg", ".txt").replace("image_2", "calib"))
+        calib = Calibration(img_path.replace(".png", ".txt").replace("image_2", "calib"))
         bev_map = (bev_map.transpose(1, 2, 0) * 255).astype(np.uint8)
         bev_map = cv2.resize(bev_map, (cnf.BEV_HEIGHT, cnf.BEV_WIDTH))
 
